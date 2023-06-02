@@ -56,7 +56,7 @@ class MainWindow(QMainWindow, QThread):
 
         self.textFilePathLabel = QLabel(self)
         self.textFilePathLabel.setGeometry(20, 25, 121, 21)
-        self.textFilePathLabel.setText('텍스트파일 경로:')
+        self.textFilePathLabel.setText('CSV 파일 경로:')
 
         self.textFilePathLineEdit = QLineEdit(self)
         self.textFilePathLineEdit.setGeometry(120, 25, 151, 20)
@@ -139,8 +139,10 @@ class MainWindow(QMainWindow, QThread):
         now = datetime.strftime(datetime.now(), "%Y-%m-%d, %H-%M-%S")
         filename = json_data["TEXT_PATH"]
         q = open(filename, 'r', encoding='utf-8')
-        news = q.read()
-        print(news)
+        rdr = q.reader(f)
+        for line in rdr:
+            print(line)
+        q.close()
 
         wc = WordCloud(font_path=json_data["FONT_PATH"],
                        background_color=json_data["BACKGROUND_COLOR"],
