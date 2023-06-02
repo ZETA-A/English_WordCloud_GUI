@@ -4,6 +4,10 @@ from datetime import datetime
 import json
 import os
 import os.path
+import pandas as pd
+from konlpy.tag import Hannanum
+import re
+from collections import Counter
 
 from PyQt5.QtWidgets import QApplication, QLabel
 import PyQt5
@@ -42,6 +46,8 @@ else:
 
 with open(LOAD_JSON, 'r', encoding="utf-8") as f:
     json_data = json.load(f)
+
+hannanum = Hannanum()
 
 
 class MainWindow(QMainWindow, QThread):
@@ -138,11 +144,34 @@ class MainWindow(QMainWindow, QThread):
 
         now = datetime.strftime(datetime.now(), "%Y-%m-%d, %H-%M-%S")
         filename = json_data["TEXT_PATH"]
-        q = open(filename, 'r', encoding='utf-8')
-        rdr = q.reader(f)
-        for line in rdr:
-            print(line)
-        q.close()
+        READ_CSV = pd.read_csv(filename)
+
+        c_list = READ_CSV['뉴스 제목'].tolist()
+        vector = ''.join(c_list)
+
+        hannanum = Hannanum()
+
+        nouns = hannanum.nouns(vector)
+        shortword = re.compile(r'\W*\b\w{1}\b')
+        nouns_str = ' '.join(nouns)
+        filtered_nouns_str = shortword.sub('', nouns_str)
+        print(filtered_nouns_str)
+
+        def count_keywords(nouns, remove_words=[], top_n=300):
+            # 단어 빈도수 카운트
+            count = Counter(nouns)
+            # 불용어 삭제
+            for word in remove_words:
+                count.pop(word, None)
+            # 빈도수가 높은 순으로 정렬
+            keywords = dict(count.most_common(top_n))
+            return keywords
+
+        # 불필요한 단어 리스트
+        remove_words = ['영화', '지난', '대한', '이후', '까지', '기자', '상승', '하락']
+
+        # 키워드 카운트 실행
+        keyword_freq = count_keywords(nouns, remove_words)
 
         wc = WordCloud(font_path=json_data["FONT_PATH"],
                        background_color=json_data["BACKGROUND_COLOR"],
@@ -150,7 +179,7 @@ class MainWindow(QMainWindow, QThread):
                        height=int(json_data["HEIGHT"]),
                        max_words=int(json_data["WORD_MAX_VALUE"]),
                        max_font_size=int(json_data["FONT_MAX_SIZE"]))
-        wc.generate(news)
+        wc.generate_from_frequencies(keyword_freq)
         wc.to_file(f'{now} WordCloud.png')
 
     def SaveAll(self):

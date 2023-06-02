@@ -1,0 +1,9 @@
+{
+	"TEXT_PATH": "./20_.csv",
+	"BACKGROUND_COLOR": "white",
+	"WIDTH": "1000",
+	"HEIGHT": "1000",
+	"FONT_PATH": "_settings/NanumGothic.ttf",
+	"WORD_MAX_VALUE": "100",
+	"FONT_MAX_SIZE": "300"
+}
